@@ -24,18 +24,38 @@ bool PointCollideCircle(const sf::Vector2f& p, const sf::CircleShape& c)
 	return false;
 }
 
+bool CircleCollideCircle(const sf::CircleShape& c1, const sf::CircleShape& c2)
+{
+	auto c1x = c1.getPosition().x + c1.getRadius();
+	auto c2x = c2.getPosition().x + c2.getRadius();
+	auto c1y = c1.getPosition().y + c1.getRadius();
+	auto c2y = c2.getPosition().y + c2.getRadius();
+
+	float delta_x = c1x - c2x;
+	float delta_y = c1y - c2y;
+
+	float distance = std::sqrt((delta_x*delta_x) + (delta_y*delta_y));
+
+	if (distance <= c1.getRadius() + c2.getRadius())
+		return true;
+
+	return false;
+}
+
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(500, 500), "Test Window");
 
 	sf::Color background_color = sf::Color::Black;
 
-	sf::Vertex mousePoint(sf::Vector2f(10.f, 10.f));
-	
-	const float radius = 15.f;
-	sf::CircleShape circle(radius*2);
-	circle.setFillColor(sf::Color::Green);
-	circle.setPosition(250.f - radius, 250.f - radius);
+	const float radius_mouseCirle = 15.f;
+	sf::CircleShape mouseCircle(radius_mouseCirle * 2);
+	mouseCircle.setFillColor(sf::Color::Blue);
+
+	const float radius_targetCircle = 15.f;
+	sf::CircleShape targetCircle(radius_targetCircle *2);
+	targetCircle.setFillColor(sf::Color::Green);
+	targetCircle.setPosition(250.f - radius_targetCircle, 250.f - radius_targetCircle);
 
 	while (window.isOpen())
 	{
@@ -48,11 +68,11 @@ int main()
 			else if (event.type == sf::Event::MouseMoved)
 			{
 				auto new_position = sf::Vector2f{ static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y) };
-				mousePoint.position = new_position;
+				mouseCircle.setPosition(new_position);
 			}
 		}
 
-		if (PointCollideCircle(mousePoint.position, circle))
+		if (CircleCollideCircle(mouseCircle, targetCircle))
 		{
 			background_color = sf::Color::Red;
 		}
@@ -62,8 +82,8 @@ int main()
 		}
 
 		window.clear(background_color);
-		window.draw(&mousePoint, 1, sf::Points);
-		window.draw(circle);
+		window.draw(targetCircle);
+		window.draw(mouseCircle);
 		window.display();
 	}
 
