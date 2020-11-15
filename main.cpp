@@ -42,20 +42,33 @@ bool CircleCollideCircle(const sf::CircleShape& c1, const sf::CircleShape& c2)
 	return false;
 }
 
+bool PointCollideRectangle(const sf::Vector2f& p, const sf::RectangleShape& r)
+{
+	const auto& rpos = r.getPosition();
+	if (
+		p.x >= rpos.x && // right of left side
+		p.x <= rpos.x + r.getSize().x && // left of right side
+		p.y >= rpos.y && // below top side
+		p.y <= rpos.y + r.getSize().y // above bottom side
+		)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(500, 500), "Test Window");
 
 	sf::Color background_color = sf::Color::Black;
 
-	const float radius_mouseCirle = 15.f;
-	sf::CircleShape mouseCircle(radius_mouseCirle * 2);
-	mouseCircle.setFillColor(sf::Color::Blue);
+	sf::Vertex mousePoint(sf::Vector2f(10.f, 10.f));
 
-	const float radius_targetCircle = 15.f;
-	sf::CircleShape targetCircle(radius_targetCircle *2);
-	targetCircle.setFillColor(sf::Color::Green);
-	targetCircle.setPosition(250.f - radius_targetCircle, 250.f - radius_targetCircle);
+	sf::RectangleShape targetRectangle(sf::Vector2f(50.f, 50.f));
+	targetRectangle.setPosition(250.f, 250.f);
+	targetRectangle.setFillColor(sf::Color::Green);
 
 	while (window.isOpen())
 	{
@@ -68,11 +81,11 @@ int main()
 			else if (event.type == sf::Event::MouseMoved)
 			{
 				auto new_position = sf::Vector2f{ static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y) };
-				mouseCircle.setPosition(new_position);
+				mousePoint.position = new_position;
 			}
 		}
 
-		if (CircleCollideCircle(mouseCircle, targetCircle))
+		if (PointCollideRectangle(mousePoint.position, targetRectangle))
 		{
 			background_color = sf::Color::Red;
 		}
@@ -82,8 +95,8 @@ int main()
 		}
 
 		window.clear(background_color);
-		window.draw(targetCircle);
-		window.draw(mouseCircle);
+		window.draw(&mousePoint, 1, sf::Points);
+		window.draw(targetRectangle);
 		window.display();
 	}
 
