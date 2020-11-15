@@ -115,19 +115,50 @@ bool CircleCollideRectangle(const sf::CircleShape& c, const sf::RectangleShape& 
 
 }
 
+bool PointCollideLine(const sf::Vector2f& p, const sf::Vertex* line)
+{
+	auto ax = line[0].position.x;
+	auto ay = line[0].position.y;
+	auto bx = line[1].position.x;
+	auto by = line[1].position.y;
+
+	auto deltaX = ax - bx;
+	auto deltaY = ay - by;
+	float line_length = std::sqrt((deltaX*deltaX) + (deltaY*deltaY));
+	
+	//distance between line first vertex and point
+	deltaX = ax - p.x;
+	deltaY = ay - p.y;
+	float d1 = std::sqrt((deltaX*deltaX) + (deltaY*deltaY));
+
+	//distance between line second vertex and point
+	deltaX = bx - p.x;
+	deltaY = by - p.y;
+	float d2 = std::sqrt((deltaX*deltaX) + (deltaY*deltaY));
+
+	// due to float inaccuracy, lets add a buffer to compensate for rounding errors
+	float buffer = 0.1f;
+
+	// if the sum of d1 and d2 is the same as the line length then we are on the line
+	if (d1 + d2 >= line_length-buffer && d1+d2 <= line_length+buffer)
+		return true;
+
+	return false;
+}
+
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(500, 500), "Test Window");
 
 	sf::Color background_color = sf::Color::Black;
 
-	const float radius_mouseCirle = 15.f;
-	sf::CircleShape mouseCircle(radius_mouseCirle * 2);
-	mouseCircle.setFillColor(sf::Color::Blue);
+	sf::Vertex mousePoint(sf::Vector2f(10.f, 10.f));
 
-	sf::RectangleShape targetRectangle(sf::Vector2f(50.f, 50.f));
-	targetRectangle.setPosition(250.f, 250.f);
-	targetRectangle.setFillColor(sf::Color::Green);
+	sf::Vertex line[] =
+	{
+		sf::Vertex(sf::Vector2f(50.f, 50.f)),
+		sf::Vertex(sf::Vector2f(100.f, 100.f))
+	};
 
 	while (window.isOpen())
 	{
@@ -140,11 +171,11 @@ int main()
 			else if (event.type == sf::Event::MouseMoved)
 			{
 				auto new_position = sf::Vector2f{ static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y) };
-				mouseCircle.setPosition(new_position);
+				mousePoint.position = new_position;
 			}
 		}
 
-		if (CircleCollideRectangle(mouseCircle, targetRectangle))
+		if (PointCollideLine(mousePoint.position, line))
 		{
 			background_color = sf::Color::Red;
 		}
@@ -154,8 +185,8 @@ int main()
 		}
 
 		window.clear(background_color);
-		window.draw(mouseCircle);
-		window.draw(targetRectangle);
+		window.draw(&mousePoint, 1, sf::Points);
+		window.draw(line, 2, sf::Lines);
 		window.display();
 	}
 
