@@ -173,7 +173,7 @@ bool CircleCollideLine(const sf::CircleShape& c, const sf::Vertex* line)
 	const float closestY = y1 + (dot*(y2 - y1));
 
 	// Make sure that the point is on the line segment
-	if (PointCollideLine(sf::Vector2f(closestX, closestY), line))
+	if(!PointCollideLine(sf::Vector2f(closestX, closestY), line))
 		return false;
 
 	deltaX = closestX - cx;
