@@ -3,6 +3,7 @@
 
 bool PointCollidePoint(const sf::Vector2f& a, const sf::Vector2f& b)
 {
+	// The points are on the same coordinates
 	if (a.x == b.x && a.y == b.y)
 		return true;
 
@@ -18,6 +19,7 @@ bool PointCollideCircle(const sf::Vector2f& p, const sf::CircleShape& c)
 	// Pythagoras to find distance between point and circle center
 	float distance = std::sqrt((delta_x*delta_x) + (delta_y*delta_y));
 
+	// The distance between point and center of circle is less than the circle radius
 	if (distance <= c.getRadius())
 		return true;
 
@@ -36,6 +38,7 @@ bool CircleCollideCircle(const sf::CircleShape& c1, const sf::CircleShape& c2)
 
 	float distance = std::sqrt((delta_x*delta_x) + (delta_y*delta_y));
 
+	// The distance between the two circle center is lower than the sum of both circle radius
 	if (distance <= c1.getRadius() + c2.getRadius())
 		return true;
 
@@ -44,6 +47,7 @@ bool CircleCollideCircle(const sf::CircleShape& c1, const sf::CircleShape& c2)
 
 bool PointCollideRectangle(const sf::Vector2f& p, const sf::RectangleShape& r)
 {
+	// The point coordinates are inside the rectangle
 	const auto& rpos = r.getPosition();
 	if (
 		p.x >= rpos.x && // right of left side
@@ -64,6 +68,8 @@ bool RectangleCollideRectangle(const sf::RectangleShape& a, const sf::RectangleS
 	const auto& asize = a.getSize();
 	const auto& bpos = b.getPosition();
 	const auto& bsize = b.getSize();
+	
+	// The sides of either rectangle overlap the other
 	if (
 		apos.x + asize.x >= bpos.x && // a right side past b left side
 		apos.x <= bpos.x + bsize.x && // a left size past b right side
@@ -77,14 +83,47 @@ bool RectangleCollideRectangle(const sf::RectangleShape& a, const sf::RectangleS
 	return false;
 }
 
+bool CircleCollideRectangle(const sf::CircleShape& c, const sf::RectangleShape& r)
+{
+	auto cx = c.getPosition().x + c.getRadius();
+	auto cy = c.getPosition().y + c.getRadius();
+
+	auto rx = r.getPosition().x;
+	auto ry = r.getPosition().y;
+	auto rx2 = r.getPosition().x + r.getSize().x;
+	auto ry2 = r.getPosition().y + r.getSize().y;
+
+	float testX = cx;
+	float testY = cy;
+
+	if (cx < rx)		testX = rx;  // Circle is to the left of rect
+	else if (cx > rx2)  testX = rx2; // Circle is to the right of rect
+
+	if (cy < ry)		testY = ry;  // Circle is above rect
+	else if (cy > ry2)  testY = ry2; // Circle is below rect
+
+	float deltaX = cx - testX;
+	float deltaY = cy - testY;
+	// Pythagoras to find distance between circle center and rect closest sides
+	float distance = std::sqrt((deltaX*deltaX) + (deltaY*deltaY));
+
+	// The distance between circle center and outer rectangle side is less than radius of circle
+	if (distance <= c.getRadius())
+		return true;
+
+	return false;
+
+}
+
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(500, 500), "Test Window");
 
 	sf::Color background_color = sf::Color::Black;
 
-	sf::RectangleShape mouseRectangle(sf::Vector2f(50.f, 50.f));
-	mouseRectangle.setFillColor(sf::Color::Blue);
+	const float radius_mouseCirle = 15.f;
+	sf::CircleShape mouseCircle(radius_mouseCirle * 2);
+	mouseCircle.setFillColor(sf::Color::Blue);
 
 	sf::RectangleShape targetRectangle(sf::Vector2f(50.f, 50.f));
 	targetRectangle.setPosition(250.f, 250.f);
@@ -101,11 +140,11 @@ int main()
 			else if (event.type == sf::Event::MouseMoved)
 			{
 				auto new_position = sf::Vector2f{ static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y) };
-				mouseRectangle.setPosition(new_position);
+				mouseCircle.setPosition(new_position);
 			}
 		}
 
-		if (RectangleCollideRectangle(mouseRectangle, targetRectangle))
+		if (CircleCollideRectangle(mouseCircle, targetRectangle))
 		{
 			background_color = sf::Color::Red;
 		}
@@ -115,7 +154,7 @@ int main()
 		}
 
 		window.clear(background_color);
-		window.draw(mouseRectangle);
+		window.draw(mouseCircle);
 		window.draw(targetRectangle);
 		window.display();
 	}
