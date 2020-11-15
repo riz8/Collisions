@@ -58,13 +58,33 @@ bool PointCollideRectangle(const sf::Vector2f& p, const sf::RectangleShape& r)
 	return false;
 }
 
+bool RectangleCollideRectangle(const sf::RectangleShape& a, const sf::RectangleShape& b)
+{
+	const auto& apos = a.getPosition();
+	const auto& asize = a.getSize();
+	const auto& bpos = b.getPosition();
+	const auto& bsize = b.getSize();
+	if (
+		apos.x + asize.x >= bpos.x && // a right side past b left side
+		apos.x <= bpos.x + bsize.x && // a left size past b right side
+		apos.y + asize.y >= bpos.y && // a top side past b bottom side
+		apos.y <= bpos.y + bsize.y    // a bottom side past b top side
+		)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(500, 500), "Test Window");
 
 	sf::Color background_color = sf::Color::Black;
 
-	sf::Vertex mousePoint(sf::Vector2f(10.f, 10.f));
+	sf::RectangleShape mouseRectangle(sf::Vector2f(50.f, 50.f));
+	mouseRectangle.setFillColor(sf::Color::Blue);
 
 	sf::RectangleShape targetRectangle(sf::Vector2f(50.f, 50.f));
 	targetRectangle.setPosition(250.f, 250.f);
@@ -81,11 +101,11 @@ int main()
 			else if (event.type == sf::Event::MouseMoved)
 			{
 				auto new_position = sf::Vector2f{ static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y) };
-				mousePoint.position = new_position;
+				mouseRectangle.setPosition(new_position);
 			}
 		}
 
-		if (PointCollideRectangle(mousePoint.position, targetRectangle))
+		if (RectangleCollideRectangle(mouseRectangle, targetRectangle))
 		{
 			background_color = sf::Color::Red;
 		}
@@ -95,7 +115,7 @@ int main()
 		}
 
 		window.clear(background_color);
-		window.draw(&mousePoint, 1, sf::Points);
+		window.draw(mouseRectangle);
 		window.draw(targetRectangle);
 		window.display();
 	}
